@@ -187,53 +187,65 @@ Press any key to continue...
 }
 
 backup_restore(){
-	while clear; do
-		title
+	title
 
-		clear
-
-		if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
-		    settings_db=/data/data/com.android.providers.settings/databases/settings.db
-		    android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
-			if [ ! -f $android_id ]; then
-				echo Copying Android ID to $android_id_file
-				sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
-				echo Done
-				sleep 1
-
-				break
-			else
-				sqlite3 "$settings_db" 'UPDATE secure SET value = "$(cat $android_id_file)" WHERE name = "android_id";'
-				echo 'Reboot to apply changes. Reboot now? [Y/N]'
-
-				wait_input
-
-				case $i in
-					y|Y)
-					reboot
-					echo Rebooting...
-					;;
-					n|N)
-						break
-					;;
-				esac
-			fi
-		else
-			echo SQLITE3 binary not found. Downloading...
-			sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.armv7-pie
-			wget -q $sqlite_cloud -O /system/xbin/
-			while true; do
-                if [ -f /system/xbin/sqlite3.armv7-pie ]; then
-                    sleep 5
-                    mv /system/xbin/sqlite3.armv7-pie /system/xbin/sqlite3
-                    chmod 0755 /system/xbin/sqlite3
-
-                    break
-                fi
-            done
+	clear
+	if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
+	    settings_db=/data/data/com.android.providers.settings/databases/settings.db
+	    android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
+	    if [ ! -f $android_id_file ]; then
+			echo Getting Android ID...
+			sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
 			echo Done
+			sleep 1
+
+			break
+		else
+		    get_android_id=$(cat $android_id_file)
+		    cat > $EXTERNAL_STORAGE/unkilled_restore_android_id.sh <<-EOF
+#!/system/bin/sh
+#Script to restore Android ID
+sqlite3 "$settings_db" 'UPDATE secure SET value = "$get_android_id" WHERE name = "android_id";'
+while clear; do
+    echo 'Reboot to apply changes. Reboot now? [Y/N]'
+
+    stty cbreak -echo
+    i=replace1
+    stty -cbreak echo
+
+    case replace2 in
+	    y|Y)
+            reboot
+            echo Rebooting...
+        ;;
+	    n|N)
+		    exit
+	    ;;
+	    *)
+	        echo
+        ;;
+    esac
+done
+EOF
+            sed -i 's/replace1/$(dd bs=1 count=1 2>/dev/null)/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
+            sed -i 's/replace2/$i/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
+            sh $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
 		fi
-	done
+	else
+		echo SQLITE3 binary not found. Downloading...
+		sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.armv7-pie
+		wget -q $sqlite_cloud -O /system/xbin/
+		while true; do
+            if [ -f /system/xbin/sqlite3.armv7-pie ]; then
+                sleep 5
+                mv /system/xbin/sqlite3.armv7-pie /system/xbin/sqlite3
+                chmod 0755 /system/xbin/sqlite3
+
+                break
+            fi
+        done
+		echo Done
+	fi
 }
 
 if [ -f /system/bin/busybox ] || [ -f /system/xbin/busybox ]; then
