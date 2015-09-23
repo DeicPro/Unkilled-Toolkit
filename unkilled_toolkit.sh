@@ -190,44 +190,43 @@ backup_restore(){
 	title
 
 	clear
-	if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
-	    settings_db=/data/data/com.android.providers.settings/databases/settings.db
-	    android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
-	    if [ ! -f $android_id_file ]; then
+    if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
+        settings_db=/data/data/com.android.providers.settings/databases/settings.db
+        android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
+        if [ ! -f $android_id_file ]; then
 			echo Getting Android ID...
 			sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
 			echo Done
 			sleep 1
-
-			break
 		else
-		    get_android_id=$(cat $android_id_file)
-		    cat > $EXTERNAL_STORAGE/unkilled_restore_android_id.sh <<-EOF
+            get_android_id=$(cat $android_id_file)
+            cat > $EXTERNAL_STORAGE/unkilled_restore_android_id.sh <<-EOF
 #!/system/bin/sh
 #Script to restore Android ID
 sqlite3 "$settings_db" 'UPDATE secure SET value = "$get_android_id" WHERE name = "android_id";'
 while clear; do
-    echo 'Reboot to apply changes. Reboot now? [Y/N]'
+    echo 'Reboot to apply changes. Reboot now? [Y/N]
+'
 
     stty cbreak -echo
     i=replace1
     stty -cbreak echo
 
     case replace2 in
-	    y|Y)
+        y|Y)
             reboot
             echo Rebooting...
         ;;
-	    n|N)
+        n|N)
 		    exit
-	    ;;
-	    *)
-	        echo
+        ;;
+        *)
+            echo
         ;;
     esac
 done
 EOF
-            sed -i 's/replace1/$(dd bs=1 count=1 2>/dev/null)/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
+            sed -i 's/replace1/$(dd bs=1 count=1 2>\/dev\/null)/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
             sed -i 's/replace2/$i/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
             sh $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
 		fi
