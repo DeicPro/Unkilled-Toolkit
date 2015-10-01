@@ -7,7 +7,7 @@ title(){
 }
 
 wait_input(){
-stty cbreak -echo
+	stty cbreak -echo
 i=$(dd bs=1 count=1 2>/dev/null)
 stty -cbreak echo
 echo $i
