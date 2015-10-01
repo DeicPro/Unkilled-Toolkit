@@ -43,6 +43,7 @@ main_menu(){
                 backup_restore
             ;;
             e|E)
+                clear
                 exit
             ;;
         esac
@@ -234,6 +235,7 @@ EOF
             fi
         done
         echo Done.
+        sleep 1
     fi
 }
 
@@ -241,13 +243,20 @@ if [ -f /system/bin/busybox ] || [ -f /system/xbin/busybox ]; then
     main_menu
 else
     title
-
+    
+    abi=$(getprop ro.product.cpu.abi)
+    abilist=$(getprop ro.product.cpu.abilist)
+    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+        arch=x86
+    else
+        arch=arm
+    fi
     echo busybox binary not found. Downloading...
-    busybox_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/busybox.bin
+    busybox_cloud="https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/busybox.$arch"
     am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $busybox_cloud 2>&1 >/dev/null
     while true; do
         if [ -f $EXTERNAL_STORAGE/download/busybox.bin ]; then
-            kill -9 $(pgrep com.android.browser)
+            am force-stop com.android.browser
             sleep 5
             cp $EXTERNAL_STORAGE/download/busybox.bin /system/xbin/busybox
             chmod 755 /system/xbin/busybox
@@ -258,4 +267,7 @@ else
         fi
     done
     echo Done.
+    sleep 1
+
+    main_menu
 fi
