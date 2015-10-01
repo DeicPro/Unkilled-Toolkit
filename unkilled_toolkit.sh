@@ -10,14 +10,21 @@ wait_input(){
     stty cbreak -echo
     i=$(dd bs=1 count=1 2>/dev/null)
     stty -cbreak echo
-    echo $i
+}
+
+wait_input_two(){
+    stty cbreak -echo
+    j=$(dd bs=1 count=1 2>/dev/null)
+    stty -cbreak echo
 }
 
 main_menu(){
     while clear; do
         title
 
-        echo ' 1|Change resolution & Play
+        echo 'Menu:
+
+ 1|Change resolution & Play
  2|Unlock free chest/energy button & Play
  3|Backup/Restore Android ID
 
@@ -71,42 +78,42 @@ change_resolution(){
 
         echo 'Smartphone or tablet? [S/T]'
         if [ "$i" == 1 ]; then
-            wait_input
+            wait_input_two
 
-            if [ "$i" == s ] || [ "$i" == S ]; then
+            if [ "$j" == s ] || [ "$j" == S ]; then
                 resolution=1080x1920
-            elif [ "$i" == t ] || [ "$i" == T ]; then
+            elif [ "$j" == t ] || [ "$j" == T ]; then
                 resolution=1920x1080
             fi
         fi
         if [ "$i" == 2 ]; then
-            wait_input
+            wait_input_two
 
-            if [ "$i" == s ] || [ "$i" == S ]; then
+            if [ "$j" == s ] || [ "$j" == S ]; then
                 resolution=720x1280
-            elif [ "$i" == t ] || [ "$i" == T ]; then
+            elif [ "$j" == t ] || [ "$j" == T ]; then
                 resolution=1280x720
             fi
         fi
         if [ "$i" == 3 ]; then
-            wait_input
+            wait_input_two
 
-            if [ "$i" == s ] || [ "$i" == S ]; then
+            if [ "$j" == s ] || [ "$j" == S ]; then
                 resolution=540x960
-            elif [ "$i" == t ] || [ "$i" == T ]; then
+            elif [ "$j" == t ] || [ "$j" == T ]; then
                 resolution=960x540
             fi
         fi
         if [ "$i" == 4 ]; then
-            wait_input
+            wait_input_two
 
-            if [ "$i" == s ] || [ "$i" == S ]; then
+            if [ "$j" == s ] || [ "$j" == S ]; then
                 resolution=360x640
-            elif [ "$i" == t ] || [ "$i" == T ]; then
+            elif [ "$j" == t ] || [ "$j" == T ]; then
                 resolution=640x360
             fi
         fi
-        if [ "$i" == s ] || [ "$i" == S ] || [ "$i" == t ] || [ "$i" == T ]; then
+        if [ "$j" == s ] || [ "$j" == S ] || [ "$j" == t ] || [ "$j" == T ]; then
             break
         fi
         echo Unknown option.
@@ -116,8 +123,7 @@ change_resolution(){
     wm size $resolution
     sleep 1
     echo 'Done.
-Running Unkilled...
-'
+Running Unkilled...'
     am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity 2>&1 >/dev/null
     sleep 1
     echo 'Done.
@@ -138,6 +144,7 @@ restore_button(){
 
         progress_file=$EXTERNAL_STORAGE/Android/data/com.madfingergames.unkilled/files/users/*/.progress
         echo Restore free chest/energy button...
+        sleep 1
         if [ -f $progress_file ]; then
             rm -f $progress_file
             if [ ! -f $progress_file ]; then
@@ -191,11 +198,9 @@ while clear; do
     echo '-= Unkilled Toolkit =-
 
 Reboot to apply changes. Reboot now? [Y/N]'
-
     stty cbreak -echo
     i=replace1
     stty -cbreak echo
-
     case replace2 in
         y|Y)
             reboot
@@ -205,7 +210,8 @@ Reboot to apply changes. Reboot now? [Y/N]'
             exit
         ;;
         *)
-        echo Unknown option.
+            echo Unknown option.
+            sleep 1
         ;;
     esac
 done
