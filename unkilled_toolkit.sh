@@ -223,12 +223,12 @@ EOF
         fi
     else
         echo sqlite3 binary not found. Downloading...
-        sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.armv7-pie
+        sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
         wget -q $sqlite_cloud -O /system/xbin/
         while true; do
-            if [ -f /system/xbin/sqlite3.armv7-pie ]; then
+            if [ -f /system/xbin/sqlite3.arm-pie ]; then
                 sleep 5
-                mv /system/xbin/sqlite3.armv7-pie /system/xbin/sqlite3
+                mv /system/xbin/sqlite3.arm-pie /system/xbin/sqlite3
                 chmod 755 /system/xbin/sqlite3
 
                 break
@@ -255,13 +255,13 @@ else
     busybox_cloud="https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/busybox.$arch"
     am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $busybox_cloud 2>&1 >/dev/null
     while true; do
-        if [ -f $EXTERNAL_STORAGE/download/busybox.bin ]; then
+        if [ -f $EXTERNAL_STORAGE/download/busybox.$arch ]; then
             am force-stop com.android.browser
             sleep 5
-            cp $EXTERNAL_STORAGE/download/busybox.bin /system/xbin/busybox
+            cp $EXTERNAL_STORAGE/download/busybox.$arch /system/xbin/busybox
             chmod 755 /system/xbin/busybox
             busybox --install -s /system/xbin
-            rm -f $EXTERNAL_STORAGE/download/busybox.bin
+            rm -f $EXTERNAL_STORAGE/download/busybox.$arch
 
             break
         fi
