@@ -125,7 +125,7 @@ change_resolution(){
     sleep 1
     echo 'Done.
 Running Unkilled...'
-    am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity 2>&1 >/dev/null
+    am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity >/dev/null 2>&1
     sleep 1
     echo 'Done.
 Press any key to restore resolution and continue...'
@@ -158,7 +158,7 @@ restore_button(){
         fi
         sleep 1
         echo Running Unkilled...
-        am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity 2>&1 >/dev/null
+        am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity >/dev/null 2>&1
         sleep 1
         echo 'Done.
 Press any key to continue...'
@@ -224,7 +224,7 @@ EOF
     else
         echo sqlite3 binary not found. Downloading...
         sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
-        #wget -q $sqlite_cloud -O /system/xbin/ #replace with curl
+        wget -q $sqlite_cloud -O /system/xbin/ #replace with curl
         while true; do
             if [ -f /system/xbin/sqlite3 ]; then
                 sleep 10
@@ -255,7 +255,7 @@ else
     fi
     echo busybox binary not found. Downloading...
     busybox_cloud="https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/busybox.$arch"
-    am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $busybox_cloud 2>&1 >/dev/null
+    am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $busybox_cloud >/dev/null 2>&1
     while true; do
         if [ -f $EXTERNAL_STORAGE/download/busybox.$arch ]; then
             am force-stop com.android.browser
