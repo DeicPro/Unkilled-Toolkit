@@ -2,33 +2,33 @@
 #Unkilled Toolkit v1.0 by Deic
 
 title(){
-echo '-= Unkilled Toolkit =-
+    echo '-= Unkilled Toolkit =-
 '
 }
 
 wait_input(){
     stty cbreak -echo
-	i=$(dd bs=1 count=1 2>/dev/null)
-	stty -cbreak echo
-	echo $i
+    i=$(dd bs=1 count=1 2>/dev/null)
+    stty -cbreak echo
+    echo $i
 }
 
 main_menu(){
-	while clear; do
-		title
+    while clear; do
+        title
 
-		echo -n ' 1|Change resolution & Play
+        echo -n ' 1|Change resolution & Play
  2|Unlock free chest/energy button & Play
  3|Backup/Restore Android ID
 
  E|xit
 '
 
-		wait_input
+        wait_input
 
-		case $i in
-			1)
-				change_resolution
+        case $i in
+            1)
+			    change_resolution
 			;;
 			2)
 				restore_button
@@ -44,7 +44,7 @@ main_menu(){
 }
 
 change_resolution(){
-	while clear; do
+    while clear; do
 		title
 
 		echo -n 'Resolution:
@@ -57,98 +57,86 @@ change_resolution(){
  B|ack
 '
 
-		wait_input
+        wait_input
 
-		if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ] || [ "$i" == b ] || [ "$i" == B ]; then
-			if [ "$i" == b ] || [ "$i" == B ]; then
-				break
-			fi
-			while clear; do
-				title
-
-				echo 'Smartphone or tablet? [S/T]
-'
-
-			wait_input
-
-				if [ "$i" == 1 ]; then
-					if [ "$i" == s ] || [ "$i" == S ]; then
-						resolution=1080x1920
-
-						break
-					elif [ "$i" == t ] || [ "$i" == T ]; then
-						resolution=1920x1080
-
-						break
-					else
-						unset i
-					fi
-				fi
-				if [ "$i" == 2 ]; then
-					if [ "$i" == s ] || [ "$i" == S ]; then
-						resolution=720x1280
-
-						break
-					elif [ "$i" == t ] || [ "$i" == T ]; then
-						resolution=1280x720
-
-						break
-					else
-						unset i
-					fi
-				fi
-				if [ "$i" == 3 ]; then
-					if [ "$i" == s ] || [ "$i" == S ]; then
-						resolution=540x960
-
-						break
-					elif [ "$i" == t ] || [ "$i" == T ]; then
-						resolution=960x540
-
-						break
-					else
-						unset i
-					fi
-				fi
-				if [ "$i" == 4 ]; then
-					if [ "$i" == s ] || [ "$i" == S ]; then
-						resolution=360x640
-
-						break
-					elif [ "$i" == t ] || [ "$i" == T ]; then
-						resolution=640x360
-
-						break
-					else
-						unset i
-					fi
-				fi
-			done
-		else
-			return
+        if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
+            break
+        fi
+		if [ "$i" == b ] || [ "$i" == B ]; then
+			return 1
 		fi
-		echo 'Changing resolution...
+		echo Unknown option.
+		sleep 1
+	done
+	while clear; do
+		title
+
+		echo 'Smartphone or tablet? [S/T]
 '
-		wm size $resolution
-		echo 'Done
+        if [ "$i" == 1 ]; then
+            wait_input
+
+            if [ "$i" == s ] || [ "$i" == S ]; then
+                resolution=1080x1920
+            elif [ "$i" == t ] || [ "$i" == T ]; then
+                resolution=1920x1080
+            fi
+        fi
+		if [ "$i" == 2 ]; then
+            wait_input
+
+			if [ "$i" == s ] || [ "$i" == S ]; then
+				resolution=720x1280
+			elif [ "$i" == t ] || [ "$i" == T ]; then
+				resolution=1280x720
+			fi
+		fi
+		if [ "$i" == 3 ]; then
+            wait_input
+
+			if [ "$i" == s ] || [ "$i" == S ]; then
+				resolution=540x960
+			elif [ "$i" == t ] || [ "$i" == T ]; then
+				resolution=960x540
+			fi
+		fi
+		if [ "$i" == 4 ]; then
+            wait_input
+
+			if [ "$i" == s ] || [ "$i" == S ]; then
+				resolution=360x640
+			elif [ "$i" == t ] || [ "$i" == T ]; then
+				resolution=640x360
+			fi
+		fi
+		if [ "$i" == s ] || [ "$i" == S ] || [ "$i" == t ] || [ "$i" == T ]; then
+		    break
+		fi
+        echo Unknown option.
+        sleep 1
+    done
+	echo 'Changing resolution...
+'
+	wm size $resolution
+	sleep 1
+	echo 'Done.
 
 Running Unkilled...
 '
-		am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity 2>&1 >/dev/null
-		echo 'Done
+	am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity 2>&1 >/dev/null
+	sleep 1
+	echo 'Done
 
 Press any key to restore resolution and continue...
 '
 
-		wait_input
+	wait_input
 
-		wm size reset
-		am force-stop com.madfingergames.unkilled
-		echo Done
-		sleep 1
-
-		break
-	done
+	wm size reset
+	am force-stop com.madfingergames.unkilled
+	sleep 1
+	echo Done
+	sleep 1
 }
 
 restore_button(){
