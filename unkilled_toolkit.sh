@@ -224,12 +224,14 @@ EOF
     else
         echo sqlite3 binary not found. Downloading...
         sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
-        wget -q $sqlite_cloud -O /system/xbin/
+        #wget -q $sqlite_cloud -O /system/xbin/ #replace with curl
         while true; do
-            if [ -f /system/xbin/sqlite3.arm-pie ]; then
-                sleep 5
-                mv /system/xbin/sqlite3.arm-pie /system/xbin/sqlite3
+            if [ -f /system/xbin/sqlite3 ]; then
+                sleep 10
+                echo Setting up permissions...
                 chmod 755 /system/xbin/sqlite3
+                sleep 1
+
 
                 break
             fi
@@ -257,11 +259,19 @@ else
     while true; do
         if [ -f $EXTERNAL_STORAGE/download/busybox.$arch ]; then
             am force-stop com.android.browser
-            sleep 5
+            sleep 10
+            echo Copying...
             cp $EXTERNAL_STORAGE/download/busybox.$arch /system/xbin/busybox
+            sleep 1
+            echo Setting up permissions...
             chmod 755 /system/xbin/busybox
+            sleep 1
+            echo Installing...
             busybox --install -s /system/xbin
+            sleep 1
+            echo Clean up downloaded file...
             rm -f $EXTERNAL_STORAGE/download/busybox.$arch
+            sleep 1
 
             break
         fi
