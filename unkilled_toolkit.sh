@@ -222,12 +222,18 @@ EOF
             sh $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
         fi
     else
+        if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+            echo x86 arch is not supported.
+            sleep 1
+            return 1
+        else
+            sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
+        fi
         echo sqlite3 binary not found. Downloading...
-        sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
         curl -k -L -o /system/xbin/sqlite3 $sqlite_cloud 2>/dev/null
         while true; do
             if [ -f /system/xbin/sqlite3 ]; then
-                sleep 10
+                sleep 5
                 echo Setting up permissions...
                 chmod 755 /system/xbin/sqlite3
                 sleep 1
@@ -245,36 +251,26 @@ clear
 
 title
 
-if [ ! -f /system/bin/busybox ] || [ ! -f /system/xbin/busybox ]; then
-    busybox=0
-fi
-if [ ! -f /system/bin/curl ] || [ ! -f /system/xbin/curl ]; then
-    curl=0
-fi
-if [ "$busybox" == 0 ]; then
-    abi=$(getprop ro.product.cpu.abi)
-    abilist=$(getprop ro.product.cpu.abilist)
+abi=$(getprop ro.product.cpu.abi)
+abilist=$(getprop ro.product.cpu.abilist)
+if [ -f /system/bin/busybox ] || [ -f /system/xbin/busybox ]; then
+    echo '' >/dev/null 2>&1
+else
     if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
         arch=i686
     else
         arch=armv7l
     fi
-    echo busybox binary not found. Downloading...
     busybox_cloud="http://www.busybox.net/downloads/binaries/latest/busybox-$arch"
+    echo busybox binary not found. Downloading...
+    sleep 1
     am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $busybox_cloud >/dev/null 2>&1
-fi
-if [ "$curl" == 0 ]; then
-    echo curl binary not found. Downloading...
-    curl_cloud=http://curl.haxx.se/gknw.net/7.40.0/dist-android/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
-    am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $curl_cloud >/dev/null 2>&1
-fi
-if [ "$busybox" == 0 ]; then
     while true; do
-        if [ -f $EXTERNAL_STORAGE/download/busybox-$arch ]; then
+        if [ -f $EXTERNAL_STORAGE/download/busybox-$arch* ]; then
             am force-stop com.android.browser
             sleep 10
             echo Copying busybox...
-            cp $EXTERNAL_STORAGE/download/busybox-$arch /system/xbin/busybox
+            cp $EXTERNAL_STORAGE/download/busybox-$arch* /system/xbin/busybox
             sleep 1
             echo Setting up permissions...
             chmod 755 /system/xbin/busybox
@@ -283,7 +279,7 @@ if [ "$busybox" == 0 ]; then
             busybox --install -s /system/xbin
             sleep 1
             echo Clean up downloaded file...
-            rm -f $EXTERNAL_STORAGE/download/busybox-$arch
+            rm -f $EXTERNAL_STORAGE/download/busybox-$arch*
             sleep 1
             echo Done.
             sleep 1
@@ -292,32 +288,43 @@ if [ "$busybox" == 0 ]; then
         fi
     done
 fi
-if [ "$curl" == 0 ]; then
-    while true; do
-        if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz ]; then
-            kill -9 $(pgrep com.android.browser)
-            sleep 10
-            echo Extracting curl...
-            tar -xz -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
-            while true; do
-                if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/RELEASE-NOTES ]; then
-                    echo Copying curl...
-                    cp $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/data/local/bin/curl /system/xbin/
-                    sleep 1
-                    echo Setting up permissions...
-                    chmod 755 /system/xbin/curl
-                    sleep 1
-                    echo Cleaning up downloaded file...
-                    rm -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
-                    sleep 1
-                    echo Done.
-                    sleep 1
+if [ -f /system/bin/curl ] || [ -f /system/xbin/curl ]; then
+    echo '' >/dev/null 2>&1
+else
+    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+        echo '' >/dev/null 2>&1
+    else
+        curl_cloud=http://curl.haxx.se/gknw.net/7.40.0/dist-android/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
+        echo curl binary not found. Downloading...
+        sleep 1
+        am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $curl_cloud >/dev/null 2>&1
+        while true; do
+            if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz ]; then
+                kill -9 $(pgrep com.android.browser)
+                sleep 10
+                echo Extracting curl...
+                tar -xz -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
+                while true; do
+                    if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/RELEASE-NOTES ]; then
+                        echo Copying curl...
+                        cp $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/data/local/bin/curl /system/xbin/
+                        sleep 1
+                        echo Setting up permissions...
+                        chmod 755 /system/xbin/curl
+                        sleep 1
+                        echo Cleaning up downloaded file...
+                        rm -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
+                        sleep 1
+                        echo Done.
+                        sleep 1
 
-                    break
-                fi
-            done
-        fi
-    done
+                        break
+                    fi
+                done
+                break
+            fi
+        done
+    fi
 fi
 
 main_menu
