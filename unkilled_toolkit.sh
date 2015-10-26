@@ -1,5 +1,5 @@
 #!/system/bin/sh
-#Unkilled Toolkit v1.0 by Deic
+# Unkilled Toolkit v1.0 by Deic
 
 title(){
     echo '-= Unkilled Toolkit =-
@@ -24,8 +24,8 @@ main_menu(){
 
         echo 'Menu:
 
- 1|Change resolution & Play
- 2|Unlock free chest/energy button & Play
+ 1|Boost & Play
+ 2|Unlock free chest/energy button
  3|Backup/Restore Android ID
 
  E|xit'
@@ -34,7 +34,7 @@ main_menu(){
 
         case $i in
             1)
-                change_resolution
+                game_boost
             ;;
             2)
                 restore_button
@@ -50,22 +50,25 @@ main_menu(){
     done
 }
 
-change_resolution(){
+game_boost(){
     while clear; do
         title
 
-        echo 'Resolution:
+        echo '- Game Boost -
+
+Resolution:
 
  1|1920x1080
  2|1280x720
  3|960x540
  4|640x360
+ 5|Nothing
 
  B|ack'
 
         wait_input
 
-        if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
+        if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ] || [ "$i" == 5 ]; then
             break
         fi
         if [ "$i" == b ] || [ "$i" == B ]; then
@@ -77,62 +80,113 @@ change_resolution(){
     while clear; do
         title
 
-        echo 'Smartphone or tablet? [S/T]'
-        if [ "$i" == 1 ]; then
-            wait_input_two
+        if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
+            echo 'Smartphone or tablet? [S/T]'
+            if [ "$i" == 1 ]; then
+                wait_input_two
 
-            if [ "$j" == s ] || [ "$j" == S ]; then
-                resolution=1080x1920
-            elif [ "$j" == t ] || [ "$j" == T ]; then
-                resolution=1920x1080
-            fi
-        fi
-        if [ "$i" == 2 ]; then
-            wait_input_two
+                if [ "$j" == s ] || [ "$j" == S ]; then
+                    resolution=1080x1920
 
-            if [ "$j" == s ] || [ "$j" == S ]; then
-                resolution=720x1280
-            elif [ "$j" == t ] || [ "$j" == T ]; then
-                resolution=1280x720
-            fi
-        fi
-        if [ "$i" == 3 ]; then
-            wait_input_two
+                    break
+                elif [ "$j" == t ] || [ "$j" == T ]; then
+                    resolution=1920x1080
 
-            if [ "$j" == s ] || [ "$j" == S ]; then
-                resolution=540x960
-            elif [ "$j" == t ] || [ "$j" == T ]; then
-                resolution=960x540
+                    break
+                fi
             fi
-        fi
-        if [ "$i" == 4 ]; then
-            wait_input_two
+            if [ "$i" == 2 ]; then
+                wait_input_two
 
-            if [ "$j" == s ] || [ "$j" == S ]; then
-                resolution=360x640
-            elif [ "$j" == t ] || [ "$j" == T ]; then
-                resolution=640x360
+                if [ "$j" == s ] || [ "$j" == S ]; then
+                    resolution=720x1280
+
+                    break
+                elif [ "$j" == t ] || [ "$j" == T ]; then
+                    resolution=1280x720
+
+                    break
+                fi
             fi
+            if [ "$i" == 3 ]; then
+                wait_input_two
+
+                if [ "$j" == s ] || [ "$j" == S ]; then
+                    resolution=540x960
+
+                    break
+                    elif [ "$j" == t ] || [ "$j" == T ]; then
+                    resolution=960x540
+
+                    break
+                fi
+            fi
+            if [ "$i" == 4 ]; then
+                wait_input_two
+
+                if [ "$j" == s ] || [ "$j" == S ]; then
+                    resolution=360x640
+
+                    break
+                elif [ "$j" == t ] || [ "$j" == T ]; then
+                    resolution=640x360
+
+                    break
+                fi
+            fi
+            echo Unknown option.
+            sleep 1
         fi
-        if [ "$j" == s ] || [ "$j" == S ] || [ "$j" == t ] || [ "$j" == T ]; then
+        if [ "$i" == 5 ]; then
             break
         fi
-        echo Unknown option.
-        sleep 1
     done
-    echo Changing resolution...
-    wm size $resolution
-    sleep 1
-    echo 'Done.
-Running Unkilled...'
+    if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
+        echo Changing resolution...
+        wm size $resolution
+        sleep 1
+        echo Done.
+        sleep 1
+    fi
+    chmod 660 /sys/module/lowmemorykiller/parameters/minfree
+    cat /sys/module/lowmemorykiller/parameters/minfree > /data/local/tmp/minfree
+    echo 10393,14105,18188,27468,31552,37120 > /sys/module/lowmemorykiller/parameters/minfree
+    chmod 220 /sys/module/lowmemorykiller/parameters/minfree
+    if mv /dev/random /dev/random.orig; then
+        ln -s /dev/urandom /dev/random
+    fi
+    cat /proc/sys/kernel/random/read_wakeup_threshold > /data/local/tmp/read_wakeup_threshold
+    cat /proc/sys/kernel/random/write_wakeup_threshold > /data/local/tmp/write_wakeup_threshold
+    cat /proc/sys/kernel/randomize_va_space > /data/local/tmp/randomize_va_space
+    sysctl -qw kernel.random.read_wakeup_threshold=4096
+    sysctl -qw kernel.random.write_wakeup_threshold=4096
+    sysctl -qw kernel.randomize_va_space=0
+    echo Running Unkilled...
     am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity >/dev/null 2>&1
     sleep 1
-    echo 'Done.
-Press any key to restore resolution and continue...'
+    echo Done.
+    sleep 1
+    unset i
+    while clear; do
+        if [ "$i" == c ] || [ "$i" == C ]; then
+            cat /data/local/tmp/minfree > /sys/module/lowmemorykiller/parameters/minfree
+            if rm -f /dev/random; then
+                mv /dev/random.orig /dev/random
+            fi
+            sysctl -qw kernel.random.read_wakeup_threshold=$(cat /data/local/tmp/read_wakeup_threshold)
+            sysctl -qw kernel.random.write_wakeup_threshold=$(cat /data/local/tmp/write_wakeup_threshold)
+            sysctl -qw kernel.randomize_va_space=$(cat /data/local/tmp/randomize_va_space)
 
-    wait_input
-
-    wm size reset
+            break
+        else
+            echo Press [C] key and after [ENTER] key to stop boost...
+            sysctl -qw vm.drop_caches=3
+            read -t 60 i
+        fi
+    done
+    if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
+        wm size reset
+    fi
     am force-stop com.madfingergames.unkilled
     sleep 1
     echo Done.
@@ -225,6 +279,7 @@ EOF
         if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
             echo x86 arch is not supported.
             sleep 1
+
             return 1
         else
             sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
@@ -237,7 +292,6 @@ EOF
                 echo Setting up permissions...
                 chmod 755 /system/xbin/sqlite3
                 sleep 1
-
 
                 break
             fi
