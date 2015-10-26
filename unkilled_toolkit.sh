@@ -87,11 +87,9 @@ Resolution:
 
                 if [ "$j" == s ] || [ "$j" == S ]; then
                     resolution=1080x1920
-
                     break
                 elif [ "$j" == t ] || [ "$j" == T ]; then
                     resolution=1920x1080
-
                     break
                 fi
             fi
@@ -100,11 +98,9 @@ Resolution:
 
                 if [ "$j" == s ] || [ "$j" == S ]; then
                     resolution=720x1280
-
                     break
                 elif [ "$j" == t ] || [ "$j" == T ]; then
                     resolution=1280x720
-
                     break
                 fi
             fi
@@ -113,11 +109,9 @@ Resolution:
 
                 if [ "$j" == s ] || [ "$j" == S ]; then
                     resolution=540x960
-
                     break
                     elif [ "$j" == t ] || [ "$j" == T ]; then
                     resolution=960x540
-
                     break
                 fi
             fi
@@ -126,11 +120,9 @@ Resolution:
 
                 if [ "$j" == s ] || [ "$j" == S ]; then
                     resolution=360x640
-
                     break
                 elif [ "$j" == t ] || [ "$j" == T ]; then
                     resolution=640x360
-
                     break
                 fi
             fi
@@ -176,10 +168,9 @@ Resolution:
             sysctl -qw kernel.random.read_wakeup_threshold=$(cat /data/local/tmp/read_wakeup_threshold)
             sysctl -qw kernel.random.write_wakeup_threshold=$(cat /data/local/tmp/write_wakeup_threshold)
             sysctl -qw kernel.randomize_va_space=$(cat /data/local/tmp/randomize_va_space)
-
             break
         else
-            echo Press [C] key and after [ENTER] key to stop boost...
+            echo 'Write [C] and press [ENTER] to stop boost...'
             sysctl -qw vm.drop_caches=3
             read -t 60 j
         fi
@@ -279,25 +270,8 @@ EOF
         if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
             echo x86 arch is not supported.
             sleep 1
-
             return 1
-        else
-            sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
         fi
-        echo sqlite3 binary not found. Downloading...
-        curl -k -L -o /system/xbin/sqlite3 $sqlite_cloud 2>/dev/null
-        while true; do
-            if [ -f /system/xbin/sqlite3 ]; then
-                sleep 5
-                echo Setting up permissions...
-                chmod 755 /system/xbin/sqlite3
-                sleep 1
-
-                break
-            fi
-        done
-        echo Done.
-        sleep 1
     fi
 }
 
@@ -337,7 +311,6 @@ else
             sleep 1
             echo Done.
             sleep 1
-
             break
         fi
     done
@@ -368,10 +341,10 @@ else
                         sleep 1
                         echo Cleaning up downloaded file...
                         rm -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
+                        rm -fr $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android
                         sleep 1
                         echo Done.
                         sleep 1
-
                         break
                     fi
                 done
@@ -380,5 +353,124 @@ else
         done
     fi
 fi
+if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
+    echo '' >/dev/null 2>&1
+else
+    echo sqlite3 binary not found. Downloading...
+    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+        echo x86 arch is not supported. Skipping download...
+        sleep 1
+        return 1
+    else
+        sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
+    fi
+    curl -k -L -o /system/xbin/sqlite3 $sqlite_cloud 2>/dev/null
+    while true; do
+        if [ -f /system/xbin/sqlite3 ]; then
+            sleep 5
+            echo Setting up permissions...
+            chmod 755 /system/xbin/sqlite3
+            sleep 1
+            echo Done.
+            sleep 1
+            break
+        fi
+    done
+fi
+
+SH_OTA(){ # v2.1_alpha By Deic
+    # Configuration
+    version=version
+    cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/update.txt
+    # Optional
+    notes_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/notes.txt
+    # 0/1 = Disabled/Enabled
+    show_version=1
+    show_notes=1
+
+    # Don't touch from here
+    script_name=$(basename $0)
+    clear
+    echo Checking updates...
+    curl -k -L -o /data/local/tmp/update.txt $cloud 2>/dev/null
+
+    if [ "$show_notes" == 1 ]; then
+        curl -k -L -o /data/local/tmp/notes.txt $notes_cloud 2>/dev/null
+    fi
+
+    while true; do
+        if [ -f /data/local/tmp/update.txt ]; then
+            if [ "$(grep $version /data/local/tmp/update.txt 2>/dev/null)" ]; then
+                clear
+                echo You have the latest version.
+                sleep 1
+                install=0
+
+                break
+            else
+                if [ "$show_version" == 1 ]; then
+                    version_opt=": $version"
+                else
+                    version_opt=...
+                fi
+
+                clear
+                echo "A new version of the script was found$version_opt
+"
+                if [ "$show_notes" == 1 ] && [ -f /data/local/tmp/notes.txt ]; then
+                    cat /data/local/tmp/notes.txt
+                    echo
+                fi
+
+                echo -n 'Want install it? (Y/N)
+
+> '
+                read i
+                case $i in
+                    y|Y )
+                        install="1"
+                        break
+                    ;;
+                    n|N )
+                        install="0"
+                        break
+                    ;;
+                    * )
+                        echo 'Write [Y] or [N] and press [ENTER]...'
+                        sleep 1
+                    ;;
+                esac
+            fi
+        fi
+    done
+
+    if [ "$install"  == 1 ]; then
+        clear
+        echo Downloading...
+        curl -k -L -o /data/local/tmp/$script_name $(cat /data/local/tmp/update.txt | tr '\n' ',' | cut -d ',' -f2) 2>/dev/null
+        sleep 1
+    fi
+
+    while true; do
+        if [ "$install" == 0 ]; then
+            break
+        fi
+
+        if [ -f /data/local/tmp/$script_name ]; then
+            echo Installing...
+            cp -f /data/local/tmp/$script_name $0
+            sleep 1
+            chmod 755 $0
+            rm -f /data/local/tmp/$script_name
+            echo Installed.
+            sleep 1
+            sh $0
+            clear
+            exit
+        fi
+    done
+}
+
+SH_OTA
 
 main_menu
