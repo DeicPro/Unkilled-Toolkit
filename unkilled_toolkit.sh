@@ -270,7 +270,6 @@ EOF
         if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
             echo x86 arch is not supported.
             sleep 1
-            return 1
         fi
     fi
 }
@@ -330,7 +329,7 @@ else
                 kill -9 $(pgrep com.android.browser)
                 sleep 10
                 echo Extracting curl...
-                tar -xz -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
+                tar -xz -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz -C $EXTERNAL_STORAGE/download
                 while true; do
                     if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/RELEASE-NOTES ]; then
                         echo Copying curl...
@@ -356,31 +355,29 @@ fi
 if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
     echo '' >/dev/null 2>&1
 else
-    echo sqlite3 binary not found. Downloading...
     if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
-        echo x86 arch is not supported. Skipping download...
-        sleep 1
-        return 1
+        echo '' >/dev/null 2>&1
     else
         sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
+        echo sqlite3 binary not found. Downloading...
+        curl -k -L -o /system/xbin/sqlite3 $sqlite_cloud 2>/dev/null
+        while true; do
+            if [ -f /system/xbin/sqlite3 ]; then
+                sleep 5
+                echo Setting up permissions...
+                chmod 755 /system/xbin/sqlite3
+                sleep 1
+                echo Done.
+                sleep 1
+                break
+            fi
+        done
     fi
-    curl -k -L -o /system/xbin/sqlite3 $sqlite_cloud 2>/dev/null
-    while true; do
-        if [ -f /system/xbin/sqlite3 ]; then
-            sleep 5
-            echo Setting up permissions...
-            chmod 755 /system/xbin/sqlite3
-            sleep 1
-            echo Done.
-            sleep 1
-            break
-        fi
-    done
 fi
 
 SH_OTA(){ # v2.1_alpha By Deic
     # Configuration
-    version=version
+    version=1.0
     cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/update.txt
     # Optional
     notes_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/notes.txt
