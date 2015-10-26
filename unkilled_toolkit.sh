@@ -166,9 +166,9 @@ Resolution:
     sleep 1
     echo Done.
     sleep 1
-    unset i
+    unset j
     while clear; do
-        if [ "$i" == c ] || [ "$i" == C ]; then
+        if [ "$j" == c ] || [ "$j" == C ]; then
             cat /data/local/tmp/minfree > /sys/module/lowmemorykiller/parameters/minfree
             if rm -f /dev/random; then
                 mv /dev/random.orig /dev/random
@@ -181,7 +181,7 @@ Resolution:
         else
             echo Press [C] key and after [ENTER] key to stop boost...
             sysctl -qw vm.drop_caches=3
-            read -t 60 i
+            read -t 60 j
         fi
     done
     if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
