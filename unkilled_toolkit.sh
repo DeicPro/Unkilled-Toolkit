@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Unkilled Toolkit v1.0 by Deic
+# Unkilled Toolkit v1.0.1 by Deic
 
 title(){
     echo '-= Unkilled Toolkit =-
@@ -24,8 +24,8 @@ main_menu(){
 
         echo 'Menu:
 
- 1|Boost & Play
- 2|Unlock free chest/energy button
+ 1|Boost performance & Play
+ 2|Unlock free treasure chest/energy button
  3|Backup/Restore Android ID
 
  E|xit'
@@ -51,6 +51,11 @@ main_menu(){
 }
 
 game_boost(){
+	if [ "$non_root" == 1 ]; then
+		echo Need a rooted device.
+		sleep 1
+		return 1
+	fi
     while clear; do
         title
 
@@ -140,6 +145,7 @@ Resolution:
         echo Done.
         sleep 1
     fi
+	echo Boosting performance...
     chmod 660 /sys/module/lowmemorykiller/parameters/minfree
     cat /sys/module/lowmemorykiller/parameters/minfree > /data/local/tmp/minfree
     echo 10393,14105,18188,27468,31552,37120 > /sys/module/lowmemorykiller/parameters/minfree
@@ -153,6 +159,8 @@ Resolution:
     sysctl -qw kernel.random.read_wakeup_threshold=4096
     sysctl -qw kernel.random.write_wakeup_threshold=4096
     sysctl -qw kernel.randomize_va_space=0
+	am kill-all 2>/dev/null
+	sleep 1
     echo Running Unkilled...
     am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity >/dev/null 2>&1
     sleep 1
@@ -178,7 +186,7 @@ Resolution:
     if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
         wm size reset
     fi
-    am force-stop com.madfingergames.unkilled
+    kill -9 $(com.madfingergames.unkilled)
     sleep 1
     echo Done.
     sleep 1
@@ -189,7 +197,7 @@ restore_button(){
         title
 
         progress_file=$EXTERNAL_STORAGE/Android/data/com.madfingergames.unkilled/files/users/*/.progress
-        echo Restore free chest/energy button...
+        echo Restore free treasure chest/energy button...
         sleep 1
         if [ -f $progress_file ]; then
             rm -f $progress_file
@@ -203,14 +211,16 @@ restore_button(){
         fi
         sleep 1
         echo Running Unkilled...
-        am start com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity >/dev/null 2>&1
+        am start --user 0 com.madfingergames.unkilled/com.madfingergames.unityplayer.MFUnityPlayerNativeActivity >/dev/null 2>&1
         sleep 1
-        echo 'Done.
-Press any key to continue...'
+        echo Done.
+		sleep 1
+		echo Press any key to continue...
 
         wait_input
 
-        am force-stop com.madfingergames.unkilled
+        am force-stop com.madfingergames.unkilled 2>/dev/null
+		kill -9 $(pgrep com.madfingergames.unkilled) 2>/dev/null
         break
     done
 }
@@ -220,18 +230,26 @@ backup_restore(){
 
     title
 
-    if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
-        settings_db=/data/data/com.android.providers.settings/databases/settings.db
-        android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
-        if [ ! -f $android_id_file ]; then
-            echo Backing up Android ID...
-            sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
-            sleep 1
-            echo Done.
-            sleep 1
-        else
-            get_android_id=$(cat $android_id_file)
-            cat > $EXTERNAL_STORAGE/unkilled_restore_android_id.sh <<-EOF
+	if [ "$non_root" == 1 ]; then
+		echo Need a rooted device.
+		sleep 1
+		return 1
+	elif [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+		echo x86 arch is not supported.
+		sleep 1
+		return 1
+	fi
+    settings_db=/data/data/com.android.providers.settings/databases/settings.db
+	android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
+	if [ ! -f $android_id_file ]; then
+		echo Backing up Android ID...
+		sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
+		sleep 1
+		echo Done.
+		sleep 1
+	else
+		get_android_id=$(cat $android_id_file)
+		cat > /data/local/tmp/unkilled_restore_android_id.sh <<-EOF
 #!/system/bin/sh
 #Script to restore Android ID
 
@@ -262,125 +280,18 @@ Reboot to apply changes. Reboot now? [Y/N]'
     esac
 done
 EOF
-            sed -i 's/replace1/$(dd bs=1 count=1 2>\/dev\/null)/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
-            sed -i 's/replace2/$i/' $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
-            sh $EXTERNAL_STORAGE/unkilled_restore_android_id.sh
-        fi
-    else
-        if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
-            echo x86 arch is not supported.
-            sleep 1
-        fi
+		sed -i 's/replace1/$(dd bs=1 count=1 2>\/dev\/null)/' /data/local/tmp/unkilled_restore_android_id.sh
+		sed -i 's/replace2/$i/' /data/local/tmp/unkilled_restore_android_id.sh
+		sh /data/local/tmp/unkilled_restore_android_id.sh
     fi
 }
 
-clear
-
-title
-
-abi=$(getprop ro.product.cpu.abi)
-abilist=$(getprop ro.product.cpu.abilist)
-if [ -f /system/bin/busybox ] || [ -f /system/xbin/busybox ]; then
-    echo '' >/dev/null 2>&1
-else
-    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
-        arch=i686
-    else
-        arch=armv7l
-    fi
-    busybox_cloud="http://www.busybox.net/downloads/binaries/latest/busybox-$arch"
-    echo busybox binary not found. Downloading...
-    sleep 1
-    am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $busybox_cloud >/dev/null 2>&1
-    while true; do
-        if [ -f $EXTERNAL_STORAGE/download/busybox-$arch* ]; then
-            am force-stop com.android.browser
-            sleep 10
-            echo Copying busybox...
-            cp $EXTERNAL_STORAGE/download/busybox-$arch* /system/xbin/busybox
-            sleep 1
-            echo Setting up permissions...
-            chmod 755 /system/xbin/busybox
-            sleep 1
-            echo Installing...
-            busybox --install -s /system/xbin
-            sleep 1
-            echo Clean up downloaded file...
-            rm -f $EXTERNAL_STORAGE/download/busybox-$arch*
-            sleep 1
-            echo Done.
-            sleep 1
-            break
-        fi
-    done
-fi
-if [ -f /system/bin/curl ] || [ -f /system/xbin/curl ]; then
-    echo '' >/dev/null 2>&1
-else
-    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
-        echo '' >/dev/null 2>&1
-    else
-        curl_cloud=http://curl.haxx.se/gknw.net/7.40.0/dist-android/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
-        echo curl binary not found. Downloading...
-        sleep 1
-        am start -a android.intent.action.VIEW -n com.android.browser/.BrowserActivity $curl_cloud >/dev/null 2>&1
-        while true; do
-            if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz ]; then
-                kill -9 $(pgrep com.android.browser)
-                sleep 10
-                echo Extracting curl...
-                tar -xz -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz -C $EXTERNAL_STORAGE/download
-                while true; do
-                    if [ -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/RELEASE-NOTES ]; then
-                        echo Copying curl...
-                        cp $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android/data/local/bin/curl /system/xbin/
-                        sleep 1
-                        echo Setting up permissions...
-                        chmod 755 /system/xbin/curl
-                        sleep 1
-                        echo Cleaning up downloaded file...
-                        rm -f $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android.tar.gz
-                        rm -fr $EXTERNAL_STORAGE/download/curl-7.40.0-rtmp-ssh2-ssl-zlib-static-bin-android
-                        sleep 1
-                        echo Done.
-                        sleep 1
-                        break
-                    fi
-                done
-                break
-            fi
-        done
-    fi
-fi
-if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
-    echo '' >/dev/null 2>&1
-else
-    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
-        echo '' >/dev/null 2>&1
-    else
-        sqlite_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/sqlite3.arm-pie
-        echo sqlite3 binary not found. Downloading...
-        curl -k -L -o /system/xbin/sqlite3 $sqlite_cloud 2>/dev/null
-        while true; do
-            if [ -f /system/xbin/sqlite3 ]; then
-                sleep 5
-                echo Setting up permissions...
-                chmod 755 /system/xbin/sqlite3
-                sleep 1
-                echo Done.
-                sleep 1
-                break
-            fi
-        done
-    fi
-fi
-
-SH_OTA(){ # v2.1_alpha By Deic
+SH_OTA(){ # v2.1_custom By Deic
     # Configuration
-    version=1.0
-    cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/update.txt
+    version=1.0.1
+    cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_update/update.txt
     # Optional
-    notes_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_Bins/notes.txt
+    notes_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_update/notes.txt
     # 0/1 = Disabled/Enabled
     show_version=1
     show_notes=1
@@ -388,21 +299,53 @@ SH_OTA(){ # v2.1_alpha By Deic
     # Don't touch from here
     script_name=$(basename $0)
     clear
+	if [  ]; then
+		non_root=1
+		while clear; do
+			echo -n 'Want check for update? (Y/N)
+
+> '
+			read i
+            case $i in
+                y|Y )
+                    check_update=1
+                    break
+                ;;
+                n|N )
+                    check_update=0
+                    break
+                ;;
+                * )
+                    echo 'Write [Y] or [N] and press [ENTER]...'
+                    sleep 1
+                ;;
+            esac
+		done
+	fi
     echo Checking updates...
-    curl -k -L -o /data/local/tmp/update.txt $cloud 2>/dev/null
-
+	if [ "$check_update" == 0 ]; then
+		main_menu
+	elif [ "$check_update" == 1 ]; then
+		am start --user 0 -a android.intent.action.VIEW $cloud >/dev/null 2>&1
+	else
+		curl -k -L -s -o /data/local/tmp/update.txt $cloud
+	fi
     if [ "$show_notes" == 1 ]; then
-        curl -k -L -o /data/local/tmp/notes.txt $notes_cloud 2>/dev/null
+		if [ "$non_root" == 1 ]; then
+			am start --user 0 -a android.intent.action.VIEW $notes_cloud >/dev/null 2>&1
+			file_location=$EXTERNAL_STORAGE/download
+		else
+			curl -k -L -s -o /data/local/tmp/notes.txt $notes_cloud
+			file_location=/data/local/tmp
+		fi
     fi
-
     while true; do
-        if [ -f /data/local/tmp/update.txt ]; then
-            if [ "$(grep $version /data/local/tmp/update.txt 2>/dev/null)" ]; then
+        if [ -f $file_location/update.txt ]; then
+            if [ "$(grep $version $file_location/update.txt 2>/dev/null)" ]; then
                 clear
                 echo You have the latest version.
                 sleep 1
                 install=0
-
                 break
             else
                 if [ "$show_version" == 1 ]; then
@@ -410,26 +353,24 @@ SH_OTA(){ # v2.1_alpha By Deic
                 else
                     version_opt=...
                 fi
-
                 clear
                 echo "A new version of the script was found$version_opt
 "
-                if [ "$show_notes" == 1 ] && [ -f /data/local/tmp/notes.txt ]; then
-                    cat /data/local/tmp/notes.txt
+                if [ "$show_notes" == 1 ] && [ -f $file_location/notes.txt ]; then
+                    cat $file_location/notes.txt
                     echo
                 fi
-
                 echo -n 'Want install it? (Y/N)
 
 > '
                 read i
                 case $i in
                     y|Y )
-                        install="1"
+                        install=1
                         break
                     ;;
                     n|N )
-                        install="0"
+                        install=0
                         break
                     ;;
                     * )
@@ -440,25 +381,30 @@ SH_OTA(){ # v2.1_alpha By Deic
             fi
         fi
     done
-
     if [ "$install"  == 1 ]; then
         clear
         echo Downloading...
-        curl -k -L -o /data/local/tmp/$script_name $(cat /data/local/tmp/update.txt | tr '\n' ',' | cut -d ',' -f2) 2>/dev/null
+		if [ "$non_root" == 1 ]; then
+			am start --user 0 -a android.intent.action.VIEW $(cat /data/local/tmp/update.txt | tr '\n' ',' | cut -d ',' -f2) >/dev/null 2>&1
+		else
+			curl -k -L -s -o /data/local/tmp/$script_name $(cat /data/local/tmp/update.txt | tr '\n' ',' | cut -d ',' -f2)
+		fi
         sleep 1
     fi
-
     while true; do
         if [ "$install" == 0 ]; then
             break
         fi
-
-        if [ -f /data/local/tmp/$script_name ]; then
+        if [ -f $file_location/$script_name ]; then
+			am force-stop com.android.browser 2>/dev/null
+			am force-stop com.android.chrome 2>/dev/null
+			sleep 1
             echo Installing...
-            cp -f /data/local/tmp/$script_name $0
+			sleep 1
+            cp -f $file_location/$script_name $0
             sleep 1
             chmod 755 $0
-            rm -f /data/local/tmp/$script_name
+            rm -f $file_location/$script_name
             echo Installed.
             sleep 1
             sh $0
@@ -467,6 +413,142 @@ SH_OTA(){ # v2.1_alpha By Deic
         fi
     done
 }
+
+clear
+mount -w -o remount rootfs
+mount -w -o remount /system
+abi=$(getprop ro.product.cpu.abi)
+abilist=$(getprop ro.product.cpu.abilist)
+
+title
+
+if [ -f /system/bin/busybox ] || [ -f /system/xbin/busybox ]; then
+    echo '' >/dev/null 2>&1
+else
+    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+        busybox_cloud=https://github.com/DeicPro/Download/releases/download/cloud/busybox.x86
+		busybox_arch=x86
+		#busybox_size=883644
+    else
+        busybox_cloud=https://github.com/DeicPro/Download/releases/download/cloud/busybox.arm
+		busybox_arch=arm
+		#busybox_size=1469764
+    fi
+    echo BusyBox binary not found. Downloading...
+    sleep 1
+    am start --user 0 -a android.intent.action.VIEW $busybox_cloud >/dev/null 2>&1
+    while true; do
+        #if [ "$(wc -c $EXTERNAL_STORAGE/download/busybox.$busybox_arch 2>/dev/null | awk '{print $1}')" == "$busybox_size" ]; then
+            am force-stop com.android.browser
+            am force-stop com.android.chrome
+            sleep 1
+            echo Copying BusyBox...
+			sleep 1
+            cp -f $EXTERNAL_STORAGE/download/busybox.$busybox_arch /system/xbin/busybox
+            sleep 1
+            echo Setting up permissions...
+            chmod 755 /system/xbin/busybox
+            sleep 1
+            echo Installing...
+            busybox --install -s /system/xbin
+            sleep 1
+            echo Clean up downloaded file...
+            rm -f $EXTERNAL_STORAGE/download/busybox.$busybox_arch
+            sleep 1
+            echo Done.
+            sleep 1
+            break
+        #fi
+    done
+fi
+if [ -f /data/local/tmp/unkilled_toolkit.sh ]
+	echo Installing Unkilled Toolkit...
+	cp -f /data/local/tmp/unkilled_toolkit.sh /system/xbin/utk
+	sleep 1
+	echo Setting up permissions...
+	chmod 755 /system/xbin/utk
+	sleep 1
+	echo Clean up downloaded file...
+	rm -f /data/local/tmp/unkilled_toolkit.sh
+	sleep 1
+	echo Done.
+	sleep 1
+	clear
+	echo 'Now write > utk < only to run Unkilled Toolkit.'
+	echo Press any key to continue...
+	
+	wait_input
+	
+	exit
+fi
+if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
+	echo Installing Unkilled Toolkit...
+	cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh $EXTERNAL_STORAGE/utk
+	sleep 1
+	echo Clean up downloaded file...
+	rm -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh
+	sleep 1
+	echo Done.
+	sleep 1
+	clear
+	echo 'Now write > sh $EXTERNAL_STORAGE/utk < only to run Unkilled Toolkit.'
+	echo 'Press [ENTER] key to continue...'
+	read i
+	exit
+fi
+if [] || [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+	SH_OTA
+fi
+if [ -f /system/bin/curl ] || [ -f /system/xbin/curl ]; then
+    echo '' >/dev/null 2>&1
+else
+    curl_cloud=https://github.com/DeicPro/Download/releases/download/cloud/curl.arm
+    echo cURL binary not found. Downloading...
+    sleep 1
+    am start -a android.intent.action.VIEW $curl_cloud >/dev/null 2>&1
+    while true; do
+        if [ "$(wc -c $EXTERNAL_STORAGE/download/curl.arm 2>/dev/null | awk '{print $1}')" ==  ]; then
+            kill -9 $(pgrep com.android.browser) 2>/dev/null
+            kill -9 $(pgrep com.android.chrome) 2>/dev/null
+			sleep 1
+            echo Copying cURL...
+			sleep 1
+            cp -f $EXTERNAL_STORAGE/download/curl.arm /system/xbin/curl
+            sleep 1
+            echo Setting up permissions...
+            chmod 755 /system/xbin/curl
+            sleep 1
+            echo Cleaning up downloaded file...
+            rm -f $EXTERNAL_STORAGE/download/curl.arm
+            sleep 1
+            echo Done.
+            sleep 1
+            break
+        fi
+    done
+fi
+if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
+    echo '' >/dev/null 2>&1
+else
+    sqlite_cloud=https://github.com/DeicPro/Download/releases/download/cloud/sqlite3.arm
+    echo SQLite3 binary not found. Downloading...
+    curl -k -L -s -o /data/local/tmp/sqlite3 $sqlite_cloud 2>/dev/null
+    while true; do
+        if [ "$(wc -c /system/xbin/sqlite3 2>/dev/null | awk '{print $1}')" ==  ]; then
+            sleep 1
+			echo Copying SQLite3...
+			sleep 1
+			cp -f /data/local/tmp/sqlite3 /system/xbin/
+			sleep 1
+            echo Setting up permissions...
+            chmod 755 /system/xbin/sqlite3
+            sleep 1
+            echo Done.
+            sleep 1
+            break
+        fi
+    done
+fi
 
 SH_OTA
 
