@@ -425,9 +425,9 @@ sh_ota(){ # v2.1_custom By Deic
         if [ -f $file_location/unkilled_toolkit.sh ]; then
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
-            sleep 5
+            sleep 1
             echo Installing...
-            sleep 5
+            sleep 1
             $script_dir/busybox cp -f $file_location/unkilled_toolkit.sh $0
             sleep 1
             $script_dir/busybox chmod 755 $0
@@ -491,9 +491,9 @@ else
         if [ -f $EXTERNAL_STORAGE/download/busybox.$arch ]; then
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
-            sleep 5
+            sleep 1
             echo Copying BusyBox...
-            sleep 5
+            sleep 1
             cp -f $EXTERNAL_STORAGE/download/busybox.$arch /data/local/unkilled_toolkit/busybox
             sleep 1
             echo Setting up permissions...
