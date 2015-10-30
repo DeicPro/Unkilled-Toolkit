@@ -9,15 +9,15 @@ title(){
 }
 
 wait_input(){
-    stty cbreak -echo
-    i=$(dd bs=1 count=1 2>/dev/null)
-    stty -cbreak echo
+    $script_dir/stty cbreak -echo
+    i=$($script_dir/dd bs=1 count=1 2>/dev/null)
+    $script_dir/stty -cbreak echo
 }
 
 wait_input_two(){
-    stty cbreak -echo
-    j=$(dd bs=1 count=1 2>/dev/null)
-    stty -cbreak echo
+    $script_dir/stty cbreak -echo
+    j=$($script_dir/dd bs=1 count=1 2>/dev/null)
+    $script_dir/stty -cbreak echo
 }
 
 main_menu(){
@@ -153,18 +153,18 @@ Resolution:
     fi
     echo Boosting performance...
     chmod 660 /sys/module/lowmemorykiller/parameters/minfree
-    cat /sys/module/lowmemorykiller/parameters/minfree > /data/local/tmp/minfree
+    $script_dir/cat /sys/module/lowmemorykiller/parameters/minfree > /data/local/tmp/minfree
     echo 10393,14105,18188,27468,31552,37120 > /sys/module/lowmemorykiller/parameters/minfree
     chmod 220 /sys/module/lowmemorykiller/parameters/minfree
     if mv /dev/random /dev/random.orig; then
-        ln -s /dev/urandom /dev/random
+        $script_dir/ln -s /dev/urandom /dev/random
     fi
-    cat /proc/sys/kernel/random/read_wakeup_threshold > /data/local/tmp/read_wakeup_threshold
-    cat /proc/sys/kernel/random/write_wakeup_threshold > /data/local/tmp/write_wakeup_threshold
-    cat /proc/sys/kernel/randomize_va_space > /data/local/tmp/randomize_va_space
-    sysctl -qw kernel.random.read_wakeup_threshold=4096
-    sysctl -qw kernel.random.write_wakeup_threshold=4096
-    sysctl -qw kernel.randomize_va_space=0
+    $script_dir/cat /proc/sys/kernel/random/read_wakeup_threshold > /data/local/tmp/read_wakeup_threshold
+    $script_dir/cat /proc/sys/kernel/random/write_wakeup_threshold > /data/local/tmp/write_wakeup_threshold
+    $script_dir/cat /proc/sys/kernel/randomize_va_space > /data/local/tmp/randomize_va_space
+    $script_dir/sysctl -qw kernel.random.read_wakeup_threshold=4096
+    $script_dir/sysctl -qw kernel.random.write_wakeup_threshold=4096
+    $script_dir/sysctl -qw kernel.randomize_va_space=0
     am kill-all 2>/dev/null
     sleep 1
     echo Running Unkilled...
@@ -175,24 +175,24 @@ Resolution:
     unset j
     while clear; do
         if [ "$j" == c ] || [ "$j" == C ]; then
-            cat /data/local/tmp/minfree > /sys/module/lowmemorykiller/parameters/minfree
+            $script_dir/cat /data/local/tmp/minfree > /sys/module/lowmemorykiller/parameters/minfree
             if rm -f /dev/random; then
                 mv /dev/random.orig /dev/random
             fi
-            sysctl -qw kernel.random.read_wakeup_threshold=$(cat /data/local/tmp/read_wakeup_threshold)
-            sysctl -qw kernel.random.write_wakeup_threshold=$(cat /data/local/tmp/write_wakeup_threshold)
-            sysctl -qw kernel.randomize_va_space=$(cat /data/local/tmp/randomize_va_space)
+            $script_dir/sysctl -qw kernel.random.read_wakeup_threshold=$($script_dir/cat /data/local/tmp/read_wakeup_threshold)
+            $script_dir/sysctl -qw kernel.random.write_wakeup_threshold=$($script_dir/cat /data/local/tmp/write_wakeup_threshold)
+            $script_dir/sysctl -qw kernel.randomize_va_space=$($script_dir/cat /data/local/tmp/randomize_va_space)
             break
         else
             echo 'Write [C] and press [ENTER] to stop boost...'
-            sysctl -qw vm.drop_caches=3
+            $script_dir/sysctl -qw vm.drop_caches=3
             read -t 60 j
         fi
     done
     if [ "$i" == 1 ] || [ "$i" == 2 ] || [ "$i" == 3 ] || [ "$i" == 4 ]; then
         wm size reset
     fi
-    kill -9 $(com.madfingergames.unkilled)
+    $script_dir/kill -9 $(com.madfingergames.unkilled)
     sleep 1
     echo Done.
     sleep 1
@@ -226,7 +226,7 @@ restore_button(){
         wait_input
 
         am force-stop com.madfingergames.unkilled 2>/dev/null
-        kill -9 $(pgrep com.madfingergames.unkilled) 2>/dev/null
+        $script_dir/kill -9 $(pgrep com.madfingergames.unkilled) 2>/dev/null
         break
     done
 }
@@ -249,7 +249,7 @@ backup_restore(){
     android_id_file=$EXTERNAL_STORAGE/unkilled_android_id
     if [ ! -f $android_id_file ]; then
         echo Backing up Android ID...
-        sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
+        $script_dir/sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
         sleep 1
         echo "Backup complete.
 
@@ -260,23 +260,27 @@ Press any key to continue..."
 
         wait_input
     else
-        get_android_id=$(cat $android_id_file)
-        cat > /data/local/tmp/unkilled_restore_android_id.sh <<-EOF
+        get_android_id=$($script_dir/cat $android_id_file)
+        $script_dir/cat > /data/local/tmp/unkilled_restore_android_id.sh <<-EOF
 #!/system/bin/sh
 #Script to restore Android ID
 
-echo Restoring Android ID...
-sqlite3 "$settings_db" 'UPDATE secure SET value = "$get_android_id" WHERE name = "android_id";'
+red='\033[0;31m'
+nc='\033[0m'
+echo "${red}-= Unkilled Toolkit =-${nc}
+
+Restoring Android ID..."
+$script_dir/sqlite3 "$settings_db" 'UPDATE secure SET value = "$get_android_id" WHERE name = "android_id";'
 sleep 1
 echo Done.
 sleep 1
 while clear; do
-    echo '-= Unkilled Toolkit =-
+    echo "${red}-= Unkilled Toolkit =-${nc}
 
-Reboot to apply changes. Reboot now? [Y/N]'
-    stty cbreak -echo
+Reboot to apply changes. Reboot now? [Y/N]"
+    $script_dir/stty cbreak -echo
     i=replace1
-    stty -cbreak echo
+    $script_dir/stty -cbreak echo
     case replace2 in
         y|Y)
             reboot
@@ -292,8 +296,8 @@ Reboot to apply changes. Reboot now? [Y/N]'
     esac
 done
 EOF
-        sed -i 's/replace1/$(dd bs=1 count=1 2>\/dev\/null)/' /data/local/tmp/unkilled_restore_android_id.sh
-        sed -i 's/replace2/$i/' /data/local/tmp/unkilled_restore_android_id.sh
+        $script_dir/sed -i 's/replace1/$($script_dir/dd bs=1 count=1 2>\/dev\/null)/' /data/local/tmp/unkilled_restore_android_id.sh
+        $script_dir/sed -i 's/replace2/$i/' /data/local/tmp/unkilled_restore_android_id.sh
         sh /data/local/tmp/unkilled_restore_android_id.sh
     fi
 }
@@ -343,13 +347,13 @@ sh_ota(){ # v2.1_custom By Deic
     elif [ "$check_update" == 1 ]; then
         am start -a android.intent.action.VIEW $cloud >/dev/null 2>&1
     else
-        curl -k -L -s -o /data/local/tmp/unkilled_toolkit.version $cloud
+        $script_dir/curl -k -L -s -o /data/local/tmp/unkilled_toolkit.version $cloud
     fi
     if [ "$show_changelog" == 1 ]; then
         if [ "$arch" == x86 ]; then
             file_location=$EXTERNAL_STORAGE/download
         else
-            curl -k -L -s -o /data/local/tmp/unkilled_toolkit.changelog $notes_cloud
+            $script_dir/curl -k -L -s -o /data/local/tmp/unkilled_toolkit.changelog $notes_cloud
             file_location=/data/local/tmp
         fi
     fi
@@ -360,21 +364,21 @@ sh_ota(){ # v2.1_custom By Deic
 
             title
 
-            if [ "$(grep $version $file_location/unkilled_toolkit.version 2>/dev/null)" ]; then
+            if [ "$($script_dir/grep $version $file_location/unkilled_toolkit.version 2>/dev/null)" ]; then
                 echo You have the latest version.
                 sleep 1
                 install=0
                 break
             else
                 if [ "$show_version" == 1 ]; then
-                    version_opt=": $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f1)"
+                    version_opt=": $($script_dir/cat $file_location/unkilled_toolkit.version 2>/dev/null | $script_dir/tr '\n' ',' | $script_dir/cut -d ',' -f1)"
                 else
                     version_opt=...
                 fi
                 echo "A new version of the script was found$version_opt
 "
                 if [ "$show_changelog" == 1 ] && [ -f $file_location/unkilled_toolkit.changelog ]; then
-                    cat $file_location/unkilled_toolkit.changelog
+                    $script_dir/cat $file_location/unkilled_toolkit.changelog
                     echo
                 fi
                 echo 'Want install it? (Y/N)'
@@ -404,9 +408,9 @@ sh_ota(){ # v2.1_custom By Deic
 
         echo Downloading...
         if [ "$arch" == x86 ]; then
-            am start -a android.intent.action.VIEW $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f2) >/dev/null 2>&1
+            am start -a android.intent.action.VIEW $(cat $file_location/unkilled_toolkit.version | $script_dir/tr '\n' ',' | $script_dir/cut -d ',' -f2) >/dev/null 2>&1
         else
-            curl -k -L -s -o $file_location/unkilled_toolkit.sh $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f2)
+            $script_dir/curl -k -L -s -o $file_location/unkilled_toolkit.sh $($script_dir/cat $file_location/unkilled_toolkit.version | $script_dir/tr '\n' ',' | $script_dir/cut -d ',' -f2)
         fi
         sleep 1
     fi
@@ -417,8 +421,6 @@ sh_ota(){ # v2.1_custom By Deic
             break
         fi
         if [ -f $file_location/unkilled_toolkit.sh ]; then
-            title
-
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
             sleep 5
@@ -443,15 +445,11 @@ clear
 
 title
 
+script_dir=/data/local/unkilled_toolkit
 if [ "$USER" == root ]; then
     mount -w -o remount rootfs
     mount -w -o remount /system
-    mkdir -p /data/local/unkilled_toolkit 2>/dev/null
-    if [ -f /data/local/unkilled_toolkit/busybox ]; then
-        for i in $(/data/local/unkilled_toolkit/busybox --list); do
-            eval alias ${i}=\"/data/local/unkilled_toolkit/busybox ${i}\"
-        done
-    fi
+    mkdir -p $script_dir 2>/dev/null
 else
     if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
         echo Installing Unkilled Toolkit...
@@ -463,7 +461,7 @@ else
         echo Done.
         sleep 1
         clear
-        echo "Now write 'sh $EXTERNAL_STORAGE/utk' only to run Unkilled Toolkit."
+        echo Now write 'sh $EXTERNAL_STORAGE/utk' only to run Unkilled Toolkit.
         exit
     fi
     non_root=1
@@ -474,7 +472,7 @@ if [ "$(getprop ro.product.cpu.abi)" == x86 ] || [ "$(getprop ro.product.cpu.abi
 else
     arch=arm
 fi
-if [ -f /data/local/unkilled_toolkit/busybox ] || [ -f $EXTERNAL_STORAGE/unkilled_toolkit/busybox ]; then
+if [ -f $script_dir/busybox ]; then
     echo '' >/dev/null 2>&1
 else
     if [ "$arch" == x86 ]; then
@@ -500,9 +498,7 @@ else
             chmod -R 755 /data/local/unkilled_toolkit
             sleep 1
             echo Installing...
-            for i in $(/data/local/unkilled_toolkit/busybox --list); do
-                eval alias ${i}=\"/data/local/unkilled_toolkit/busybox ${i}\"
-            done
+            $script_dir/busybox --install -s $script_dir
             sleep 1
             echo Clean up downloaded file...
             rm -f $EXTERNAL_STORAGE/download/busybox.$arch
@@ -513,26 +509,20 @@ else
         fi
     done
 fi
-if [ -f /data/local/tmp/unkilled_toolkit.sh ] || [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
+if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
     echo Installing Unkilled Toolkit...
-    if [ -f /data/local/tmp/unkilled_toolkit.sh ]; then
-        cp -f /data/local/tmp/unkilled_toolkit.sh /system/xbin/utk
-    fi
-    if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
-        cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh /system/xbin/utk
-    fi
+    cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh /system/xbin/utk
     sleep 1
     echo Setting up permissions...
     chmod 755 /system/xbin/utk
     sleep 1
     echo Clean up downloaded file...
-    rm -f /data/local/tmp/unkilled_toolkit.sh
     rm -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh
     sleep 1
     echo Done.
     sleep 1
     clear
-    echo "Now write 'utk' only to run Unkilled Toolkit."
+    echo Now write 'utk' only to run Unkilled Toolkit.
     exit
 fi
 if [ "$arch" == x86 ]; then
@@ -540,7 +530,7 @@ if [ "$arch" == x86 ]; then
 
     main_menu
 fi
-if [ -f /data/local/unkilled_toolkit/curl ]; then
+if [ -f $script_dir/curl ]; then
     echo '' >/dev/null 2>&1
 else
     curl_cloud=https://github.com/DeicPro/Download/releases/download/cloud/curl.arm
@@ -548,16 +538,16 @@ else
     sleep 1
     am start -a android.intent.action.VIEW $curl_cloud >/dev/null 2>&1
     while true; do
-        if [ "$(wc -c $EXTERNAL_STORAGE/download/curl.arm 2>/dev/null | awk '{print $1}')" == 345616 ]; then
-            kill -9 $(pgrep com.android.browser) 2>/dev/null
-            kill -9 $(pgrep com.android.chrome) 2>/dev/null
+        if [ "$($script_dir/wc -c $EXTERNAL_STORAGE/download/curl.arm 2>/dev/null | $script_dir/awk '{print $1}')" == 345616 ]; then
+            $script_dir/kill -9 $(pgrep com.android.browser) 2>/dev/null
+            $script_dir/kill -9 $(pgrep com.android.chrome) 2>/dev/null
             sleep 1
             echo Copying cURL...
             sleep 1
-            cp -f $EXTERNAL_STORAGE/download/curl.arm /data/local/unkilled_toolkit/curl
+            cp -f $EXTERNAL_STORAGE/download/curl.arm $script_dir/curl
             sleep 1
             echo Setting up permissions...
-            chmod 755 /data/local/unkilled_toolkit/curl
+            chmod 755 $script_dir/curl
             sleep 1
             echo Cleaning up downloaded file...
             rm -f $EXTERNAL_STORAGE/download/curl.arm
@@ -568,21 +558,21 @@ else
         fi
     done
 fi
-if [ -f /data/local/unkilled_toolkit/sqlite3 ]; then
+if [ -f $script_dir/sqlite3 ]; then
     echo '' >/dev/null 2>&1
 else
     sqlite_cloud=https://github.com/DeicPro/Download/releases/download/cloud/sqlite3.arm
     echo SQLite3 binary not found. Downloading...
-    curl -k -L -s -o /data/local/tmp/sqlite3 $sqlite_cloud 2>/dev/null
+    $script_dir/curl -k -L -s -o /data/local/tmp/sqlite3 $sqlite_cloud 2>/dev/null
     while true; do
-        if [ "$(wc -c /data/local/tmp/sqlite3 2>/dev/null | awk '{print $1}')" == 877144 ]; then
+        if [ "$($script_dir/wc -c /data/local/tmp/sqlite3 2>/dev/null | $script_dir/awk '{print $1}')" == 877144 ]; then
             sleep 1
             echo Copying SQLite3...
             sleep 1
             cp -f /data/local/tmp/sqlite3 /data/local/unkilled_toolkit
             sleep 1
             echo Setting up permissions...
-            chmod 755 /data/local/unkilled_toolkit/sqlite3
+            chmod 755 $script_dir/sqlite3
             sleep 1
             echo Done.
             sleep 1
