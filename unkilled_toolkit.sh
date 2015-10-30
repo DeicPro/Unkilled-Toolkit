@@ -345,6 +345,7 @@ sh_ota(){ # v2.1_custom By Deic
     title
 
     echo Checking updates...
+    sleep 1
     if [ "$check_update" == 0 ]; then
         main_menu
     elif [ "$check_update" == 1 ]; then
@@ -360,10 +361,8 @@ sh_ota(){ # v2.1_custom By Deic
             file_location=/data/local/tmp
         fi
     fi
-    while :; do
-        if [ -f $file_location/unkilled_toolkit.version ]; then
-            clear
-
+    while clear; do
+        if [ "$($script_dir/busybox grep https $file_location/unkilled_toolkit.version 2>/dev/null)" ]; then
             title
 
             if [ "$($script_dir/busybox grep $version $file_location/unkilled_toolkit.version 2>/dev/null)" ]; then
@@ -398,6 +397,7 @@ sh_ota(){ # v2.1_custom By Deic
                     ;;
                     * )
                         echo 'Press [Y] or [N] key...'
+                        sleep 1
                     ;;
                 esac
             fi
@@ -422,12 +422,10 @@ sh_ota(){ # v2.1_custom By Deic
             $script_dir/busybox rm -f $file_location/unkilled_toolkit.changelog
             break
         fi
-        if [ -f $file_location/unkilled_toolkit.sh ]; then
+        if [ "$($script_dir/busybox grep "#!/system/bin/sh" $file_location/unkilled_toolkit.sh 2>/dev/null)" ]; then
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
-            sleep 1
             echo Installing...
-            sleep 1
             $script_dir/busybox cp -f $file_location/unkilled_toolkit.sh $0
             sleep 1
             $script_dir/busybox chmod 755 $0
@@ -488,12 +486,10 @@ else
     sleep 1
     am start -a android.intent.action.VIEW $busybox_cloud >/dev/null 2>&1
     while true; do
-        if [ -f $EXTERNAL_STORAGE/download/busybox.$arch ]; then
+        if [ "$(grep "BusyBox v1.23.2.YDS" $EXTERNAL_STORAGE/download/busybox.$arch 2>/dev/null)" ]; then
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
-            sleep 1
             echo Copying BusyBox...
-            sleep 1
             cp -f $EXTERNAL_STORAGE/download/busybox.$arch /data/local/unkilled_toolkit/busybox
             sleep 1
             echo Setting up permissions...
