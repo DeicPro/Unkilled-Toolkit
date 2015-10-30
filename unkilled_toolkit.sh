@@ -31,9 +31,11 @@ main_menu(){
  3|Backup/Restore Android ID
 
  E|xit'
-
-        wait_input
-
+        if [ "$non_root" == 1 ]; then
+            read i
+        else
+            wait_input
+        fi
         case $i in
             1)
                 game_boost
@@ -221,10 +223,14 @@ restore_button(){
         sleep 1
         echo Done.
         sleep 1
-        echo Press any key to continue...
+        if [ "$non_root" == 1 ]; then
+            echo 'Press [ENTER] key to continue...'
+            read i
+        else
+            echo Press any key to continue...
 
-        wait_input
-
+            wait_input
+        fi
         am force-stop com.madfingergames.unkilled 2>/dev/null
         break
     done
@@ -252,8 +258,8 @@ backup_restore(){
         sleep 1
         echo "Backup complete.
 
-A file called 'unkilled_android_id' was created in $EXTERNAL_STORAGE.
-Move that file to your other device to restore your Unkilled progress.
+A file called \'unkilled_android_id\' was created in your internal or external memory.
+Move that file to main memory storage of your other device to restore your Unkilled progress.
 
 Press any key to continue..."
 
@@ -457,7 +463,7 @@ else
         echo Done.
         sleep 1
         clear
-        echo Now write 'sh $EXTERNAL_STORAGE/utk' only to run Unkilled Toolkit.
+        echo Now write \'sh /sdcard/utk\' only to run Unkilled Toolkit.
         exit
     fi
     non_root=1
@@ -515,7 +521,7 @@ if [ "$arch" == x86 ] && [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; 
     echo Done.
     sleep 1
     clear
-    echo Now write 'utk' only to run Unkilled Toolkit.
+    echo Now write \'utk\' only to run Unkilled Toolkit.
     exit
 fi
 if [ "$arch" == x86 ]; then
@@ -586,7 +592,7 @@ if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
     echo Done.
     sleep 1
     clear
-    echo Now write 'utk' only to run Unkilled Toolkit.
+    echo Now write \'utk\' only to run Unkilled Toolkit.
     exit
 fi
 
