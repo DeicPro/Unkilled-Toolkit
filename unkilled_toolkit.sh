@@ -311,6 +311,8 @@ sh_ota(){ # v2.1_custom By Deic
     # Don't touch from here
     if [ "$arch" == x86 ]; then
         while clear; do
+            title
+
             echo 'Want check for update? (Y/N)'
 
             wait_input
@@ -332,6 +334,9 @@ sh_ota(){ # v2.1_custom By Deic
         done
     fi
     clear
+
+    title
+
     echo Checking updates...
     if [ "$check_update" == 0 ]; then
         main_menu
@@ -348,11 +353,14 @@ sh_ota(){ # v2.1_custom By Deic
             file_location=/data/local/tmp
         fi
     fi
-    while true; do
+    while :; do
         if [ -f $file_location/unkilled_toolkit.version ]; then
             sleep 1
-            if [ "$(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f1)" == $version ]; then
-                clear
+            clear
+
+            title
+
+            if [ "$(grep $version $file_location/unkilled_toolkit.version 2>/dev/null)" ]; then
                 echo You have the latest version.
                 sleep 1
                 install=0
@@ -363,7 +371,6 @@ sh_ota(){ # v2.1_custom By Deic
                 else
                     version_opt=...
                 fi
-                clear
                 echo "A new version of the script was found$version_opt
 "
                 if [ "$show_changelog" == 1 ] && [ -f $file_location/unkilled_toolkit.changelog ]; then
@@ -385,7 +392,6 @@ sh_ota(){ # v2.1_custom By Deic
                     ;;
                     * )
                         echo 'Press [Y] or [N] key...'
-                        sleep 1
                     ;;
                 esac
             fi
@@ -393,6 +399,9 @@ sh_ota(){ # v2.1_custom By Deic
     done
     if [ "$install"  == 1 ]; then
         clear
+
+        title
+
         echo Downloading...
         if [ "$arch" == x86 ]; then
             am start -a android.intent.action.VIEW $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f2) >/dev/null 2>&1
@@ -401,13 +410,15 @@ sh_ota(){ # v2.1_custom By Deic
         fi
         sleep 1
     fi
-    while true; do
+    while :; do
         if [ "$install" == 0 ]; then
             rm -f $file_location/unkilled_toolkit.version
             rm -f $file_location/unkilled_toolkit.changelog
             break
         fi
         if [ -f $file_location/unkilled_toolkit.sh ]; then
+            title
+
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
             sleep 5
