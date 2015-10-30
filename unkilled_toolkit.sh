@@ -2,8 +2,10 @@
 # Unkilled Toolkit v1.0.1 by Deic
 
 title(){
-    echo '-= Unkilled Toolkit =-
-'
+    red='\033[0;31m'
+    nc='\033[0m'
+    echo "${red}-= Unkilled Toolkit =-${nc}
+"
 }
 
 wait_input(){
@@ -46,19 +48,23 @@ main_menu(){
                 clear
                 exit
             ;;
+            *)
+                echo Unknown option.
+                sleep 1
+            ;;
         esac
     done
 }
 
 game_boost(){
-    if [ "$non_root" == 1 ]; then
-        echo Need a rooted device.
-        sleep 1
-        return 1
-    fi
     while clear; do
         title
 
+        if [ "$non_root" == 1 ]; then
+            echo Need a rooted device.
+            sleep 1
+            return 1
+        fi
         echo '- Game Boost -
 
 Resolution:
@@ -234,7 +240,7 @@ backup_restore(){
         echo Need a rooted device.
         sleep 1
         return 1
-    elif [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+    elif [ "$arch" == x86 ]; then
         echo x86 arch is not supported.
         sleep 1
         return 1
@@ -245,8 +251,14 @@ backup_restore(){
         echo Backing up Android ID...
         sqlite3 "$settings_db" 'SELECT value FROM secure WHERE name = "android_id";' > $android_id_file
         sleep 1
-        echo Done.
-        sleep 1
+        echo "Backup complete.
+
+A file called 'unkilled_android_id' was created in $EXTERNAL_STORAGE.
+Move that file to your other device to restore your Unkilled progress.
+
+Press any key to continue..."
+
+        wait_input
     else
         get_android_id=$(cat $android_id_file)
         cat > /data/local/tmp/unkilled_restore_android_id.sh <<-EOF
@@ -286,26 +298,23 @@ EOF
     fi
 }
 
-SH_OTA(){ # v2.1_custom By Deic
+sh_ota(){ # v2.1_custom By Deic
     # Configuration
-    version=1.0.1
-    cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_update/update.txt
+    version=v1.0.1
+    cloud=https://github.com/DeicPro/Download/releases/download/cloud/unkilled_toolkit.version
     # Optional
-    notes_cloud=https://github.com/DeicPro/Download/releases/download/Unkilled_Toolkit_update/notes.txt
+    notes_cloud=https://github.com/DeicPro/Download/releases/download/cloud/unkilled_toolkit.changelog
     # 0/1 = Disabled/Enabled
     show_version=1
-    show_notes=1
+    show_changelog=1
 
     # Don't touch from here
-    script_name=$(basename $0)
-    clear
-    if [  ]; then
-        non_root=1
+    if [ "$arch" == x86 ]; then
         while clear; do
-            echo -n 'Want check for update? (Y/N)
+            echo 'Want check for update? (Y/N)'
 
-> '
-            read i
+            wait_input
+
             case $i in
                 y|Y )
                     check_update=1
@@ -316,32 +325,33 @@ SH_OTA(){ # v2.1_custom By Deic
                     break
                 ;;
                 * )
-                    echo 'Write [Y] or [N] and press [ENTER]...'
+                    echo 'Press [Y] or [N] key...'
                     sleep 1
                 ;;
             esac
         done
     fi
+    clear
     echo Checking updates...
     if [ "$check_update" == 0 ]; then
         main_menu
     elif [ "$check_update" == 1 ]; then
-        am start --user 0 -a android.intent.action.VIEW $cloud >/dev/null 2>&1
+        am start -a android.intent.action.VIEW $cloud >/dev/null 2>&1
     else
-        curl -k -L -s -o /data/local/tmp/update.txt $cloud
+        curl -k -L -s -o /data/local/tmp/unkilled_toolkit.version $cloud
     fi
-    if [ "$show_notes" == 1 ]; then
-        if [ "$non_root" == 1 ]; then
-            am start --user 0 -a android.intent.action.VIEW $notes_cloud >/dev/null 2>&1
+    if [ "$show_changelog" == 1 ]; then
+        if [ "$arch" == x86 ]; then
             file_location=$EXTERNAL_STORAGE/download
         else
-            curl -k -L -s -o /data/local/tmp/notes.txt $notes_cloud
+            curl -k -L -s -o /data/local/tmp/unkilled_toolkit.changelog $notes_cloud
             file_location=/data/local/tmp
         fi
     fi
     while true; do
-        if [ -f $file_location/update.txt ]; then
-            if [ "$(grep $version $file_location/update.txt 2>/dev/null)" ]; then
+        if [ -f $file_location/unkilled_toolkit.version ]; then
+            sleep 1
+            if [ "$(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f1)" == $version ]; then
                 clear
                 echo You have the latest version.
                 sleep 1
@@ -349,21 +359,21 @@ SH_OTA(){ # v2.1_custom By Deic
                 break
             else
                 if [ "$show_version" == 1 ]; then
-                    version_opt=": $version"
+                    version_opt=": $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f1)"
                 else
                     version_opt=...
                 fi
                 clear
                 echo "A new version of the script was found$version_opt
 "
-                if [ "$show_notes" == 1 ] && [ -f $file_location/notes.txt ]; then
-                    cat $file_location/notes.txt
+                if [ "$show_changelog" == 1 ] && [ -f $file_location/unkilled_toolkit.changelog ]; then
+                    cat $file_location/unkilled_toolkit.changelog
                     echo
                 fi
-                echo -n 'Want install it? (Y/N)
+                echo 'Want install it? (Y/N)'
 
-> '
-                read i
+                wait_input
+
                 case $i in
                     y|Y )
                         install=1
@@ -374,7 +384,7 @@ SH_OTA(){ # v2.1_custom By Deic
                         break
                     ;;
                     * )
-                        echo 'Write [Y] or [N] and press [ENTER]...'
+                        echo 'Press [Y] or [N] key...'
                         sleep 1
                     ;;
                 esac
@@ -384,29 +394,33 @@ SH_OTA(){ # v2.1_custom By Deic
     if [ "$install"  == 1 ]; then
         clear
         echo Downloading...
-        if [ "$non_root" == 1 ]; then
-            am start --user 0 -a android.intent.action.VIEW $(cat /data/local/tmp/update.txt | tr '\n' ',' | cut -d ',' -f2) >/dev/null 2>&1
+        if [ "$arch" == x86 ]; then
+            am start -a android.intent.action.VIEW $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f2) >/dev/null 2>&1
         else
-            curl -k -L -s -o /data/local/tmp/$script_name $(cat /data/local/tmp/update.txt | tr '\n' ',' | cut -d ',' -f2)
+            curl -k -L -s -o $file_location/unkilled_toolkit.sh $(cat $file_location/unkilled_toolkit.version | tr '\n' ',' | cut -d ',' -f2)
         fi
         sleep 1
     fi
     while true; do
         if [ "$install" == 0 ]; then
+            rm -f $file_location/unkilled_toolkit.version
+            rm -f $file_location/unkilled_toolkit.changelog
             break
         fi
-        if [ -f $file_location/$script_name ]; then
+        if [ -f $file_location/unkilled_toolkit.sh ]; then
             am force-stop com.android.browser 2>/dev/null
             am force-stop com.android.chrome 2>/dev/null
-            sleep 1
+            sleep 5
             echo Installing...
-            sleep 1
-            cp -f $file_location/$script_name $0
+            sleep 5
+            cp -f $file_location/unkilled_toolkit.sh $0
             sleep 1
             chmod 755 $0
-            rm -f $file_location/$script_name
+            rm -f $file_location/unkilled_toolkit.sh
             echo Installed.
             sleep 1
+            rm -f $file_location/unkilled_toolkit.version
+            rm -f $file_location/unkilled_toolkit.changelog
             sh $0
             clear
             exit
@@ -415,91 +429,107 @@ SH_OTA(){ # v2.1_custom By Deic
 }
 
 clear
-mount -w -o remount rootfs
-mount -w -o remount /system
-abi=$(getprop ro.product.cpu.abi)
-abilist=$(getprop ro.product.cpu.abilist)
 
 title
 
-if [ -f /system/bin/busybox ] || [ -f /system/xbin/busybox ]; then
+if [ "$USER" == root ]; then
+    mount -w -o remount rootfs
+    mount -w -o remount /system
+    mkdir -p /data/local/unkilled_toolkit 2>/dev/null
+    if [ -f /data/local/unkilled_toolkit/busybox ]; then
+        for i in $(/data/local/unkilled_toolkit/busybox --list); do
+            eval alias ${i}=\"/data/local/unkilled_toolkit/busybox ${i}\"
+        done
+    fi
+else
+    if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
+        echo Installing Unkilled Toolkit...
+        cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh $EXTERNAL_STORAGE/utk
+        sleep 1
+        echo Clean up downloaded file...
+        rm -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh
+        sleep 1
+        echo Done.
+        sleep 1
+        clear
+        echo "Now write 'sh $EXTERNAL_STORAGE/utk' only to run Unkilled Toolkit."
+        exit
+    fi
+    non_root=1
+    main_menu
+fi
+if [ "$(getprop ro.product.cpu.abi)" == x86 ] || [ "$(getprop ro.product.cpu.abilist)" == x86 ]; then
+    arch=x86
+else
+    arch=arm
+fi
+if [ -f /data/local/unkilled_toolkit/busybox ] || [ -f $EXTERNAL_STORAGE/unkilled_toolkit/busybox ]; then
     echo '' >/dev/null 2>&1
 else
-    if [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
+    if [ "$arch" == x86 ]; then
         busybox_cloud=https://github.com/DeicPro/Download/releases/download/cloud/busybox.x86
-        busybox_arch=x86
         #busybox_size=883644
     else
         busybox_cloud=https://github.com/DeicPro/Download/releases/download/cloud/busybox.arm
-        busybox_arch=arm
         #busybox_size=1469764
     fi
     echo BusyBox binary not found. Downloading...
     sleep 1
-    am start --user 0 -a android.intent.action.VIEW $busybox_cloud >/dev/null 2>&1
+    am start -a android.intent.action.VIEW $busybox_cloud >/dev/null 2>&1
     while true; do
-        #if [ "$(wc -c $EXTERNAL_STORAGE/download/busybox.$busybox_arch 2>/dev/null | awk '{print $1}')" == "$busybox_size" ]; then
-            am force-stop com.android.browser
-            am force-stop com.android.chrome
-            sleep 1
+        if [ -f $EXTERNAL_STORAGE/download/busybox.$arch ]; then
+            am force-stop com.android.browser 2>/dev/null
+            am force-stop com.android.chrome 2>/dev/null
+            sleep 5
             echo Copying BusyBox...
-            sleep 1
-            cp -f $EXTERNAL_STORAGE/download/busybox.$busybox_arch /system/xbin/busybox
+            sleep 5
+            cp -f $EXTERNAL_STORAGE/download/busybox.$arch /data/local/unkilled_toolkit/busybox
             sleep 1
             echo Setting up permissions...
-            chmod 755 /system/xbin/busybox
+            chmod -R 755 /data/local/unkilled_toolkit
             sleep 1
             echo Installing...
-            busybox --install -s /system/xbin
+            for i in $(/data/local/unkilled_toolkit/busybox --list); do
+                eval alias ${i}=\"/data/local/unkilled_toolkit/busybox ${i}\"
+            done
             sleep 1
             echo Clean up downloaded file...
-            rm -f $EXTERNAL_STORAGE/download/busybox.$busybox_arch
+            rm -f $EXTERNAL_STORAGE/download/busybox.$arch
             sleep 1
             echo Done.
             sleep 1
             break
-        #fi
+        fi
     done
 fi
-if [ -f /data/local/tmp/unkilled_toolkit.sh ]
+if [ -f /data/local/tmp/unkilled_toolkit.sh ] || [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
     echo Installing Unkilled Toolkit...
-    cp -f /data/local/tmp/unkilled_toolkit.sh /system/xbin/utk
+    if [ -f /data/local/tmp/unkilled_toolkit.sh ]; then
+        cp -f /data/local/tmp/unkilled_toolkit.sh /system/xbin/utk
+    fi
+    if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
+        cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh /system/xbin/utk
+    fi
     sleep 1
     echo Setting up permissions...
     chmod 755 /system/xbin/utk
     sleep 1
     echo Clean up downloaded file...
     rm -f /data/local/tmp/unkilled_toolkit.sh
-    sleep 1
-    echo Done.
-    sleep 1
-    clear
-    echo 'Now write > utk < only to run Unkilled Toolkit.'
-    echo Press any key to continue...
-    
-    wait_input
-    
-    exit
-fi
-if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
-    echo Installing Unkilled Toolkit...
-    cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh $EXTERNAL_STORAGE/utk
-    sleep 1
-    echo Clean up downloaded file...
     rm -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh
     sleep 1
     echo Done.
     sleep 1
     clear
-    echo 'Now write > sh $EXTERNAL_STORAGE/utk < only to run Unkilled Toolkit.'
-    echo 'Press [ENTER] key to continue...'
-    read i
+    echo "Now write 'utk' only to run Unkilled Toolkit."
     exit
 fi
-if [] || [ "$abi" == x86 ] || [ "$abilist" == x86 ]; then
-    SH_OTA
+if [ "$arch" == x86 ]; then
+    sh_ota
+
+    main_menu
 fi
-if [ -f /system/bin/curl ] || [ -f /system/xbin/curl ]; then
+if [ -f /data/local/unkilled_toolkit/curl ]; then
     echo '' >/dev/null 2>&1
 else
     curl_cloud=https://github.com/DeicPro/Download/releases/download/cloud/curl.arm
@@ -507,16 +537,16 @@ else
     sleep 1
     am start -a android.intent.action.VIEW $curl_cloud >/dev/null 2>&1
     while true; do
-        if [ "$(wc -c $EXTERNAL_STORAGE/download/curl.arm 2>/dev/null | awk '{print $1}')" ==  ]; then
+        if [ "$(wc -c $EXTERNAL_STORAGE/download/curl.arm 2>/dev/null | awk '{print $1}')" == 345616 ]; then
             kill -9 $(pgrep com.android.browser) 2>/dev/null
             kill -9 $(pgrep com.android.chrome) 2>/dev/null
             sleep 1
             echo Copying cURL...
             sleep 1
-            cp -f $EXTERNAL_STORAGE/download/curl.arm /system/xbin/curl
+            cp -f $EXTERNAL_STORAGE/download/curl.arm /data/local/unkilled_toolkit/curl
             sleep 1
             echo Setting up permissions...
-            chmod 755 /system/xbin/curl
+            chmod 755 /data/local/unkilled_toolkit/curl
             sleep 1
             echo Cleaning up downloaded file...
             rm -f $EXTERNAL_STORAGE/download/curl.arm
@@ -527,21 +557,21 @@ else
         fi
     done
 fi
-if [ -f /system/bin/sqlite3 ] || [ -f /system/xbin/sqlite3 ]; then
+if [ -f /data/local/unkilled_toolkit/sqlite3 ]; then
     echo '' >/dev/null 2>&1
 else
     sqlite_cloud=https://github.com/DeicPro/Download/releases/download/cloud/sqlite3.arm
     echo SQLite3 binary not found. Downloading...
     curl -k -L -s -o /data/local/tmp/sqlite3 $sqlite_cloud 2>/dev/null
     while true; do
-        if [ "$(wc -c /system/xbin/sqlite3 2>/dev/null | awk '{print $1}')" ==  ]; then
+        if [ "$(wc -c /data/local/tmp/sqlite3 2>/dev/null | awk '{print $1}')" == 877144 ]; then
             sleep 1
             echo Copying SQLite3...
             sleep 1
-            cp -f /data/local/tmp/sqlite3 /system/xbin/
+            cp -f /data/local/tmp/sqlite3 /data/local/unkilled_toolkit
             sleep 1
             echo Setting up permissions...
-            chmod 755 /system/xbin/sqlite3
+            chmod 755 /data/local/unkilled_toolkit/sqlite3
             sleep 1
             echo Done.
             sleep 1
@@ -550,6 +580,6 @@ else
     done
 fi
 
-SH_OTA
+sh_ota
 
 main_menu
