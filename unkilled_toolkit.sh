@@ -226,7 +226,6 @@ restore_button(){
         wait_input
 
         am force-stop com.madfingergames.unkilled 2>/dev/null
-        $script_dir/kill -9 $(pgrep com.madfingergames.unkilled) 2>/dev/null
         break
     done
 }
@@ -267,9 +266,7 @@ Press any key to continue..."
 
 red='\033[0;31m'
 nc='\033[0m'
-echo "${red}-= Unkilled Toolkit =-${nc}
-
-Restoring Android ID..."
+echo Restoring Android ID...
 $script_dir/sqlite3 "$settings_db" 'UPDATE secure SET value = "$get_android_id" WHERE name = "android_id";'
 sleep 1
 echo Done.
@@ -296,7 +293,7 @@ Reboot to apply changes. Reboot now? [Y/N]"
     esac
 done
 EOF
-        $script_dir/sed -i 's/replace1/$($script_dir/dd bs=1 count=1 2>\/dev\/null)/' /data/local/tmp/unkilled_restore_android_id.sh
+        $script_dir/sed -i 's/replace1/$(\/data\/local\/unkilled_toolkit\/dd bs=1 count=1 2>\/dev\/null)/' /data/local/tmp/unkilled_restore_android_id.sh
         $script_dir/sed -i 's/replace2/$i/' /data/local/tmp/unkilled_restore_android_id.sh
         sh /data/local/tmp/unkilled_restore_android_id.sh
     fi
@@ -359,7 +356,6 @@ sh_ota(){ # v2.1_custom By Deic
     fi
     while :; do
         if [ -f $file_location/unkilled_toolkit.version ]; then
-            sleep 1
             clear
 
             title
@@ -509,7 +505,7 @@ else
         fi
     done
 fi
-if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
+if [ "$arch" == x86 ] || [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
     echo Installing Unkilled Toolkit...
     cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh /system/xbin/utk
     sleep 1
@@ -579,6 +575,22 @@ else
             break
         fi
     done
+fi
+if [ -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh ]; then
+    echo Installing Unkilled Toolkit...
+    cp -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh /system/xbin/utk
+    sleep 1
+    echo Setting up permissions...
+    chmod 755 /system/xbin/utk
+    sleep 1
+    echo Clean up downloaded file...
+    rm -f $EXTERNAL_STORAGE/download/unkilled_toolkit.sh
+    sleep 1
+    echo Done.
+    sleep 1
+    clear
+    echo Now write 'utk' only to run Unkilled Toolkit.
+    exit
 fi
 
 sh_ota
